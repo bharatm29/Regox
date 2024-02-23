@@ -29,8 +29,9 @@ func Match(i, j int, pattern, text string) string {
 
 			i++ // skipping [
 
-			if pattern[i] == text[j] {
-				if pattern[i] == '!' {
+			prev := pattern[i]
+			if prev == text[j] {
+				if prev == '!' {
 					negate = true
 				}
 				matched = true
@@ -38,10 +39,33 @@ func Match(i, j int, pattern, text string) string {
 			i++
 
 			for i < n && pattern[i] != ']' {
-				if pattern[i] == text[j] {
-					matched = true
+				switch pattern[i] {
+				case '-':
+					i++
+
+					if i >= n {
+						return SYNTAX_ERROR
+					}
+
+					if pattern[i] == ']' { // matching - in syntax like [-]
+						if text[j] == '-' {
+							matched = true
+						}
+						break
+					}
+
+					if prev <= text[j] && text[j] <= pattern[i] {
+						i++
+					} else {
+						return UNMATCHED
+					}
+				default:
+					if pattern[i] == text[j] {
+						matched = true
+					}
+					prev = pattern[i]
+					i++
 				}
-				i++
 			}
 
 			if pattern[i] != ']' {
